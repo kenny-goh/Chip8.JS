@@ -3,7 +3,10 @@ Javascript implementation of the Chip 8 Virtual Machine
 
 Status: Work in progress
 
-The emulator can load most of the programs except for games.. virtual keyboard input still needs to be worked on.
+The emulator can run most of the programs except for games.. 
+Features not implemented yet
+1. Virtual keybord
+2. Sound
 
 How to run the emulator.
 1. Open the index.html using your internet browser ( eg. Chrome )
