@@ -3,8 +3,10 @@ Javascript implementation of the Chip 8 Virtual Machine
 
 Status: Work in progress
 
-The emulator can run most of the programs except for games.. 
+
+The emulator can run most of the programs except for games..
 Features not implemented yet
+
 1. Virtual keybord
 2. Sound
 
