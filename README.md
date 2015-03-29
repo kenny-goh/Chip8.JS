@@ -12,3 +12,4 @@ How to run the emulator.
 
 ![] (https://github.com/kenny-goh/Chip8.JS/blob/master/Chip8Emulator.png)
 
+
