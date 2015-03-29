@@ -5,6 +5,10 @@
 /**************************************************************************************************
  * App logic
  **************************************************************************************************/
+
+
+
+
 //
 //$( "#programInput" ).change(function() {
 //    console.log("Program file is chosen");
@@ -64,13 +68,19 @@
  * Helper
  **************************************************************************************************/
 
+function numberMagnitude(number, magnitude){
+    return Math.floor(number / magnitude);
+}
+
 function sleep(milliseconds) {
+    /*
     var start = new Date().getTime();
     for (var i = 0; i < 1e7; i++) {
         if ((new Date().getTime() - start) > milliseconds){
             break;
         }
     }
+    */
 }
 
 function assert(condition, message) {
@@ -96,6 +106,11 @@ function fileExists(url) {
     }
 }
 
+// PERFOMANCE TUNING
+BINARY_STRINGS = new Object();
+for ( var i = 0; i < 256; i++) {
+    BINARY_STRINGS[i] = i.toString(2).padZero(8);
+}
 
 
 /**************************************************************************************************
@@ -120,19 +135,8 @@ function Chip8VMError(message) {
  * Constructor for the virtual Chip8VM
  */
 var Chip8VM = function() {
-    this.running = false;
-    this.programLoaded = false;
-    this._memory = [];
-    this.vRegs = [];
-    this.stack = []
-    this.iReg = 0;
-    this.stackPtr = 0;
-    this.counter = 0;
-    this.errors = [];
-    this._key_pressed = -1;
-    this.virtualInterupt = false;
     this.display = new Display();
-    this._initialize();
+    this._initialize(true);
 };
 
 // Constants
@@ -141,27 +145,40 @@ Chip8VM.MEMORY_OFFSET_DATA = 1536;
 Chip8VM.MAX_MEMORY = 4095;
 Chip8VM.MAX_VREG = 16;
 Chip8VM.MAX_STACK = 16;
-Chip8VM.DELAY = 50;
+Chip8VM.DELAY = 1;
+Chip8VM.HERTZ = 1;
 
 /**
  * Initializer method
  * @private
  */
-Chip8VM.prototype._initialize = function() {
+Chip8VM.prototype._initialize = function(clearMemory) {
 
-    this.programLoaded = false;
     this.running = false;
+    this.programLoaded = false;
+    this.vRegs = [];
+    this.stack = []
     this.iReg = 0;
     this.stackPtr = 0;
     this.counter = 0;
     this.errors = [];
     this._key_pressed = -1;
-    this.virtualInterupt = false;
+    this.delayTimerRegister = 0;
+    this.delay = parseInt($("#delayTextEditor").val());
+    this.display.color =  $("#colorTextEditor").val();
+    this.debugger = $("#debuggerCheckBox").is(":checked");
+
+    this.timeStarted = 0;
+    this.timeStopped = 0;
+    this.instructionsExecuted = 0;
 
     // Init _memory
-    this._memory.length = 0;
-    for (var i = 0; i < Chip8VM.MAX_MEMORY; i++) {
-        this._memory.push(0); // 0 bytes
+    if (clearMemory) {
+        this._memory = [];
+        this._memory.length = 0;
+        for (var i = 0; i < Chip8VM.MAX_MEMORY; i++) {
+            this._memory.push(0); // 0 bytes
+        }
     }
     // Init V registers
     this.vRegs.length = 0;
@@ -344,13 +361,13 @@ Chip8VM.prototype._dump_stacks = function() {
 Chip8VM.prototype._mainLoop = function() {
 
     //console.log("**********************************************************************")
-    //console.log("VIRTUAL INTERRUPT:", this.virtualInterupt);
-    //console.log('COUNTER:', this.counter)
+    //console.log('COUNTER:', this.counter);
+    //console.log('DELAY TIMER:', this.delayTimerRegister / 60);
 
     var hiByte = this.getProgramMemory(this.counter);
     var loByte = this.getProgramMemory(this.counter+1);
 
-    console.log(hiByte,loByte,this.counter);
+    //console.log(hiByte,loByte,this.counter);
 
     if ( this.counter >= Chip8VM.MEMORY_OFFSET_DATA) {
         throw new Chip8VMError("Counter reached end of program");
@@ -368,9 +385,7 @@ Chip8VM.prototype._mainLoop = function() {
 
     //console.log('HI BYTE:', hiByte.toString(16));
     //console.log('LO BYTE:', loByte.toString(16));
-    console.log('OPCODE:', opCode.toString(16));
-    //console.log('OPCODE LE:', opCodeLE);
-    //console.log('OPCODE BE:', opCodeBE);
+    //console.log('OPCODE:', opCode.toString(16));
 
     // Refer to http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#5xy0
     // for complete specification of the opcodes
@@ -379,6 +394,7 @@ Chip8VM.prototype._mainLoop = function() {
         // 00E0 CLS opcode
         // Clear the display.
         this.display.flush();
+        //console.log("FLUSH!");
     }
     else if (opCode == 0x00EE) {
         // 00EE RET opcode
@@ -391,21 +407,21 @@ Chip8VM.prototype._mainLoop = function() {
     else if ( opCodeLE == 0x1 ) {
         // 1nnn JP addr opcode
         // Jump to location nnn.
-        console.log("Jump address ", opCode & 0x0FFF );
+        //console.log("Jump address ", opCode & 0x0FFF );
         var nnn =  ( opCode & 0x0FFF ) - Chip8VM.MEMORY_OFFSET_PROGRAM  ;
         if ( this.counter == nnn + 2) {
-            console.log("Pogram has finished execution.");
+            //console.log("Pogram has finished execution.");
             this.stop();
         }
         else {
-            console.log(this.counter, nnn)
+            //console.log(this.counter, nnn)
             this.counter = nnn;
         }
     }
     else if (opCodeLE == 0x2) {
         // 2nnn CALL addr
         // Call subroutine at nnn.
-        console.log("Call subroutine ", opCode & 0x0FFF );
+        //console.log("Call subroutine ", opCode & 0x0FFF );
         var nnn =  ( opCode & 0x0FFF ) - Chip8VM.MEMORY_OFFSET_PROGRAM;
         this.stackPtr += 1;
         this.stack[this.stackPtr-1] = this.counter;
@@ -584,6 +600,7 @@ Chip8VM.prototype._mainLoop = function() {
         // Set I = nnn.
         // The value of register I is set to nnn.
         this.iReg = opCode & 0x0FFF;
+        //console.log("IREG:", this.iReg);
     }
     else if ( opCodeLE == 0xB ) {
         // Bnnn - JP V0, addr
@@ -597,7 +614,7 @@ Chip8VM.prototype._mainLoop = function() {
         var x = hiByte & 0x0F;
         var kk = loByte;
         var randNumber = Math.floor((Math.random() * 255) + 0);
-
+        //console.log("RANDOM:", randNumber);
         this.vRegs[x] = kk & randNumber;
     }
     else if ( opCodeLE == 0xD ) {
@@ -618,13 +635,12 @@ Chip8VM.prototype._mainLoop = function() {
         var y = loByte >> 4;
         var vX = this.vRegs[x];
         var vY = this.vRegs[y];
-        var n = opCodeLE;
-
-
-        console.log('I REG:', this.iReg)
-        console.log("X",vX,"Y",vY)
+        var n = opCodeBE;
 
         var address = this.iReg;
+
+        //console.log('ADDRESS:', address);
+       // console.log("X",vX,"Y",vY, 'N',n);
 
         var byte = 0;
         var collide = false;
@@ -660,7 +676,9 @@ Chip8VM.prototype._mainLoop = function() {
         // Fx07 - LD Vx, DT
         // Set Vx = delay timer value.
         // The value of DT is placed into Vx.
-        throw new Chip8VMError("Fx07 Not implemented");
+        // throw new Chip8VMError("Fx07 Not implemented");
+        var x = hiByte & 0x0F;
+        this.vRegs[x] = this.delayTimerRegister / Chip8VM.HERTZ;
     }
     else if ( opCodeLE == 0xF &&
               loByte == 0x0A ) {
@@ -670,11 +688,11 @@ Chip8VM.prototype._mainLoop = function() {
         var x = hiByte & 0x0F;
         if ( this._key_pressed >= 0 ) {
             this.vRegs[x] = this._key_pressed;
-            this.virtualInterupt = true;
+            // Reset keys
+            this._key_pressed = -1;
         }
         else {
             this.counter -= 2;
-            this.virtualInterupt = false;
         }
     }
     else if ( opCodeLE == 0xF &&
@@ -682,14 +700,15 @@ Chip8VM.prototype._mainLoop = function() {
         // Fx15 - LD DT, Vx
         // Set delay timer = Vx.
         // DT is set equal to the value of Vx.
-        throw new Chip8VMError("Fx07 Not implemented");
+        var x = hiByte & 0x0F;
+        this.delayTimerRegister = this.vRegs[x] * Chip8VM.HERTZ;
     }
     else if ( opCodeLE == 0xF &&
               loByte == 0x18) {
         // Fx18 - LD ST, Vx
         // Set sound timer = Vx.
         // ST is set equal to the value of Vx.
-        throw new Chip8VMError("Fx07 Not implemented");
+        // throw new Chip8VMError("Fx07 Not implemented");
     }
     else if ( opCodeLE == 0xF &&
               loByte == 0x1E ) {
@@ -704,36 +723,26 @@ Chip8VM.prototype._mainLoop = function() {
         // Fx29 - LD F, Vx
         // Set I = location of sprite for digit Vx.
         var x = hiByte & 0x0F;
-        this.iReg = this.vRegs[x];
+        this.iReg = this.vRegs[x]*5;
     }
     else if ( opCodeLE == 0xF &&
               loByte == 0x33 ) {
         // Fx33 - LD B, Vx
-        // Store BCD representation of Vx in _memory locations I, I+1, and I+2.
+        // Store BCD representation of Vx in memory locations I, I+1, and I+2.
         // The interpreter takes the decimal value of Vx, and places the hundreds
         // digit in _memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.
-        //var x = hiByte >>> 4;
-        //
-        //var address = this.iReg
-        //
-        //var hundreds;
-        //var tens ;
-        //var digits;
-        //
-        //if (x % 100  >= 0) {
-        //    x = (x % 10) / 10;
-        //    hundreds = x;
-        //}
-        //if ( x % 10 >= 0 ) {
-        //    x = (x % 10) / 10;
-        //    tens = x;
-        //}
-        //digits = (x % 10) / 10;
-        //
-        //this.vRegs[address] = hundreds;
-        //this.vRegs[address+1] = tens;
-        //this.vRegs[address+2] = digits;
-        throw new Chip8VMError("Fx33 Not Implemented!");
+        var x = hiByte & 0x0F;
+        var address = this.iReg;
+
+        vX = this.vRegs[x];
+
+        var hundreds = numberMagnitude(vX, 100);
+        var tens = numberMagnitude(vX, 10);
+        var digits = numberMagnitude(vX, 1);
+
+        this.setMemory(address, hundreds);
+        this.setMemory(address+1, tens);
+        this.setMemory(address+2, digits);
     }
     else if ( opCodeLE == 0xF &&
               loByte == 0x55) {
@@ -742,18 +751,18 @@ Chip8VM.prototype._mainLoop = function() {
         var x = hiByte & 0x0F;
         var address = this.iReg;
         for ( var i = 0; i <= x; i++) {
-            this.setProgramMemory(address, this.vRegs[i]);
+            this.setMemory(address, this.vRegs[i]);
             address += 1;
         }
     }
     else if ( opCodeLE == 0xF &&
               loByte  == 0x65) {
         // Fx65 - LD Vx, [I]
-        // Read registers V0 through Vx from _memory starting at location I.
+        // Read registers V0 through Vx from memory starting at location I.
         var x = hiByte & 0x0F;
         var address = this.iReg;
         for ( var i = 0; i <= x; i++) {
-            this.vRegs[i] = this.getDataMemory(address+i);
+            this.vRegs[i] = this.getMemory(address+i);
         }
     }
     else if (opCode == 0x0000 ) {
@@ -762,10 +771,16 @@ Chip8VM.prototype._mainLoop = function() {
 
     this.display.renderScreen();
 
-    this.update_debugger();
+    if (  this.debugger ) {
+        this.update_debugger();
+    }
 
-    // Reset keys
-    this._key_pressed = -1;
+    if ( this.delayTimerRegister > 0) {
+        this.delayTimerRegister = this.delayTimerRegister-1;
+    }
+
+    this.instructionsExecuted += 1;
+
 
 }
 
@@ -790,9 +805,7 @@ Chip8VM.prototype.update_debugger = function() {
  */
 Chip8VM.prototype.start = function() {
 
-     if ( ! this.programLoaded  ) {
-        throw new Chip8VMError("No program loaded");
-    }
+    this.timeStarted = new Date().getTime();
 
     this.running = true;
 
@@ -809,7 +822,7 @@ Chip8VM.prototype.start = function() {
             if ( cpu.running ) {
                 try {
                     cpu._mainLoop();
-                    sleep(Chip8VM.DELAY);
+                    sleep(cpu.delay);
                     animFrame( recursiveAnim );
                 }
                 catch (e) {
@@ -832,13 +845,20 @@ Chip8VM.prototype.start = function() {
 Chip8VM.prototype.stop = function() {
     console.log("HALT");
     this.running = false;
+    this.timeStopped = new Date().getTime();
+    var perf = (this.timeStopped - this.timeStarted) / 1000;
+    console.log("TIME:", perf );
+    var instructionsPerSec = this.instructionsExecuted / perf;
+    console.log("Instructions / sec:", instructionsPerSec );
 };
 
 /**
  * Reset the state of the Chip 8 Virtual Machine
  */
 Chip8VM.prototype.reset = function() {
-    this._initialize();
+    this.display.flush();
+    this.display.renderScreen();
+    this._initialize(false);
 };
 
 /**
@@ -904,12 +924,14 @@ var CPUController = new function() {
  */
 var Display = function() {
     this.frameBuffer = [];
+    this.color = Display.SCREEN_COLOR;
     this._initialize();
 };
 
 // Constants
 Display.SCREEN_WIDTH =  64;
 Display.SCREEN_HEIGHT = 32;
+Display.SCREEN_COLOR = "#00FF00";
 
 /**
  *
@@ -943,18 +965,10 @@ Display.prototype.flush = function() {
  */
 Display.prototype.writePixel = function(x,y, value) {
 
-    if ( x > Display.SCREEN_WIDTH) {
-        return false;
-    }
-    if ( x < 0) {
-        return false;
-    }
-    if (y > Display.SCREEN_HEIGHT) {
-        return false;
-    }
-    if ( y < 0) {
-        return false;
-    }
+    if ( x > Display.SCREEN_WIDTH) return false;
+    if ( x < 0) return false;
+    if (y > Display.SCREEN_HEIGHT) return false;
+    if ( y < 0) return false;
 
     var collide = false;
 
@@ -962,34 +976,8 @@ Display.prototype.writePixel = function(x,y, value) {
         collide = true;
     }
 
-    this.frameBuffer[x][y] = value;
-    //this.frameBuffer[x][y] ^ value;
+    this.frameBuffer[x][y] = this.frameBuffer[x][y] ^ value;
     return collide;
-/*
-    if ( x >= Display.SCREEN_WIDTH) {
-        x = x - Display.SCREEN_WIDTH;
-    }
-    if ( x < 0) {
-        x = Display.SCREEN_WIDTH + x;
-    }
-    if (y >= Display.SCREEN_HEIGHT) {
-        y = y - Display.SCREEN_HEIGHT;
-    }
-    if ( y < 0) {
-        y = Display.SCREEN_HEIGHT + y;
-    }
-
-
-    var collide = false;
-
-    if (this.frameBuffer[x][y] == 1) {
-        collide = true;
-    }
-
-    this.frameBuffer[x][y] = value;
-    //this.frameBuffer[x][y] ^ value;
-    return collide;
- */
 };
 
 /**
@@ -998,15 +986,15 @@ Display.prototype.writePixel = function(x,y, value) {
  * @param y
  */
 Display.prototype.writeBytes = function(x,y, bytes) {
-    // TODO: This is VERY SLOW. Optimize later
     var collide = false;
-    var strbytes = bytes.toString(2).padZero(8);
-    for ( var i = 0; i < strbytes.length; i++ ) {
-        var strbyte = strbytes[i];
-        collide = this.writePixel(x+i,y, parseInt(strbyte)) || collide ;
+    var strBytes = BINARY_STRINGS[bytes];
+    for ( var i = 0; i < strBytes.length; i++ ) {
+        var strByte = strBytes[i];
+        collide = this.writePixel(x+i,y, parseInt(strByte)) || collide ;
     }
     return collide;
 };
+
 
 /**
  *
@@ -1015,16 +1003,15 @@ Display.prototype.renderScreen = function() {
 
     var canvas =  document.getElementById('display');
     var ctx = canvas.getContext('2d');
-    ctx.fillStyle = "white";
 
     var canvasWidth = canvas.width;
     var canvasHeight = canvas.height;
 
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    ctx.fillStyle = this.color;
 
     var ratio_x = canvasWidth / Display.SCREEN_WIDTH;
     var ratio_y = canvasHeight / Display.SCREEN_HEIGHT;
-
 
     for ( var x = 0; x <= Display.SCREEN_WIDTH; x++) {
         for (var y = 0; y <= Display.SCREEN_HEIGHT; y++) {
@@ -1044,3 +1031,9 @@ Display.prototype.renderScreen = function() {
 var Sound = function() {
     // todo
 };
+
+
+/**************************************************************************************************
+ *
+ **************************************************************************************************/
+
