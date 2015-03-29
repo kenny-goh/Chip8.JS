@@ -15,12 +15,19 @@ License under MIT<BR>
     <div id="program" style="margin-top: 10px;">
         Program: <input type="file" id="programInput" style="width: 30em;">
     </div>
+    <div id="parameters" style="margin-top: 10px;">
+        Parameters:
+        Delay (ms) <input type="text" id="delayTextEditor" style="width: 5em;">
+        Display colors <input type="text" id="colorTextEditor" style="width: 10em;">
+        Debugger <input type="checkbox" id="debuggerCheckBox" checked>
+        Step-through mode <input type="checkbox">
+    </div>
     <div id="cpuController" style="margin-top: 10px;">
         CPU Controller
-        <button disabled>Start</button>
-        <button disabled>Halt</button>
+        <button id="buttonStart">Start</button>
+        <button id="buttonHalt">Halt</button>
+        <button id="buttonReset">Reset</button>
         <button disabled>Next</button>
-        <button disabled>Reset</button>
         Counter <input type="text" id="counterText" style="width: 5em;" readonly>
         Status <input type="text" id="statusText" style="width: 5em;" readonly>
     </div>
@@ -41,28 +48,28 @@ License under MIT<BR>
                     <div id="controller" >
                         <table>
                             <tr>
-                                <td><button>1</button></td>
-                                <td><button>2</button></td>
-                                <td><button>3</button></td>
-                                <td><button>C</button></td>
+                                <td><button id="button1">1</button></td>
+                                <td><button id="button2">2</button></td>
+                                <td><button id="button3">3</button></td>
+                                <td><button id="buttonC">C</button></td>
                             </tr>
                             <tr>
-                                <td><button>4</button></td>
-                                <td><button>5</button></td>
-                                <td><button>6</button></td>
-                                <td><button>D</button></td>
+                                <td><button id="button4">4</button></td>
+                                <td><button id="button5">5</button></td>
+                                <td><button id="button6">6</button></td>
+                                <td><button id="buttonD">D</button></td>
                             </tr>
                             <tr>
-                                <td><button>7</button></td>
-                                <td><button>8</button></td>
-                                <td><button>9</button></td>
-                                <td><button>E</button></td>
+                                <td><button id="button7">7</button></td>
+                                <td><button id="button8">8</button></td>
+                                <td><button id="button9">9</button></td>
+                                <td><button id="buttonE">E</button></td>
                             </tr>
                             <tr>
-                                <td><button>A</button></td>
-                                <td><button>0</button></td>
-                                <td><button>B</button></td>
-                                <td><button>F</button></td>
+                                <td><button id="buttonA">A</button></td>
+                                <td><button id="button0">0</button></td>
+                                <td><button id="buttonB">B</button></td>
+                                <td><button id="buttonF">F</button></td>
                             </tr>
                         </table>
                     </div>
@@ -78,7 +85,7 @@ License under MIT<BR>
                     <div id ='register'>
                         Register<BR>
                         <div>
-                        <textarea id ="registerTextArea" rows="4095" cols="25" style ="height: 300px;max-height: 3000px;" readonly>
+                        <textarea id ="registerTextArea" rows="4095" cols="25" style ="height: 280px;" readonly>
                         </textarea>
                         </div>
                     </div>
@@ -86,7 +93,7 @@ License under MIT<BR>
                 <td valign="top">
                     <div id ='memory'>
                         Memory<BR>
-                        <textarea id="memoryTextArea" rows="4095" cols="25" style ="height: 300px;max-height: 300px;">
+                        <textarea id="memoryTextArea" rows="4095" cols="25" style ="height: 280px;">
 
                         </textarea>
                     </div>
@@ -100,7 +107,7 @@ License under MIT<BR>
                 <td valign="top">
                     <div>
                         Stack<BR>
-                        <textarea id ="stackTextArea" rows="16" cols="25" style ="height: 300px;max-height: 300px;" readonly>
+                        <textarea id ="stackTextArea" rows="16" cols="25" style ="height: 280px" readonly>
                         </textarea>
                     </div>
                 </td>
@@ -112,6 +119,90 @@ License under MIT<BR>
 <script src="chip8.js" ></script>
 <script>
     var chip8VM = new Chip8VM();
+
+    $( "#buttonStart" ).click(function() {
+        chip8VM.start();
+    });
+
+    $( "#buttonHalt" ).click(function() {
+        chip8VM.stop();
+    });
+
+    $( "#buttonReset" ).click(function() {
+        chip8VM.reset();
+    });
+
+    /*
+    for ( var i = 0; i < 16; i++) {
+        $("#button" + i.toString(16).toUpperCase()).click(function () {
+            chip8VM._key_pressed = i;
+        });
+    }
+    */
+
+    $("#button1").click(function () {
+        chip8VM._key_pressed = 1;
+    });
+
+    $("#button2").click(function () {
+        chip8VM._key_pressed = 2;
+    });
+
+    $("#button3").click(function () {
+        chip8VM._key_pressed = 3;
+    });
+
+    $("#button4").click(function () {
+        chip8VM._key_pressed = 4;
+    });
+
+    $("#button5").click(function () {
+        chip8VM._key_pressed = 5;
+    });
+
+    $("#button6").click(function () {
+        chip8VM._key_pressed = 6;
+    });
+
+    $("#button7").click(function () {
+        chip8VM._key_pressed = 7;
+    });
+
+    $("#button8").click(function () {
+        chip8VM._key_pressed = 8;
+    });
+
+    $("#button9").click(function () {
+        chip8VM._key_pressed = 9;
+    });
+
+    $("#buttonA").click(function () {
+        chip8VM._key_pressed = 10;
+    });
+
+    $("#buttonB").click(function () {
+        chip8VM._key_pressed = 11;
+    });
+
+    $("#buttonC").click(function () {
+        chip8VM._key_pressed = 12;
+    });
+
+    $("#buttonD").click(function () {
+        chip8VM._key_pressed = 13;
+    });
+
+    $("#buttonE").click(function () {
+        chip8VM._key_pressed = 14;
+    });
+
+    $("#buttonF").click(function () {
+        chip8VM._key_pressed = 15;
+    });
+
+
+    $("#colorTextEditor").val(Display.SCREEN_COLOR);
+    $("#delayTextEditor").val(Chip8VM.DELAY);
 
 
     $( "#programInput" ).change(function() {
