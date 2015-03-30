@@ -1,4 +1,5 @@
 # Chip8.JS
+![] (https://github.com/kenny-goh/Chip8.JS/blob/master/logo.png)
 
 **Javascript implementation of the Chip 8 Virtual Machine that runs in any modern browser**
 
