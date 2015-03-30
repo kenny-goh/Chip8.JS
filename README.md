@@ -9,7 +9,7 @@ This is a personal project to learn the basics of writing an emulator. Initially
 
 The emulator can run most of the Chip 8 program and some games. There are still some work to do to make it fully functional.
 
-**Features not fully implemented yet:**
+**Todos:**
 
 1. Virtual keyboard ( The keyboard works, but is not fully tested ) 
 
@@ -18,6 +18,8 @@ The emulator can run most of the Chip 8 program and some games. There are still 
 3. 100% compatibility with all Chip 8 program.
 
 4. Look and feel. The program is very user-unfriendly at the moment.
+
+5. Code refactoring.. The code is a unpolished at the moment. 
 
 **How to run the emulator**:
 
