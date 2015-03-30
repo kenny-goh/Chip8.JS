@@ -16,6 +16,8 @@ Features not fully implemented yet:
 
 3. 100% compatibility with all Chip 8 program.
 
+4. Look and feel. The program is very user-unfriendly at the moment.
+
 How to run the emulator:
 
 1. Open the index.html using your internet browser ( eg. Chrome )
