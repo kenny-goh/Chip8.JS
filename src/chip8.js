@@ -3,68 +3,6 @@
  */
 
 /**************************************************************************************************
- * App logic
- **************************************************************************************************/
-
-
-
-
-//
-//$( "#programInput" ).change(function() {
-//    console.log("Program file is chosen");
-//    var file = this.files[0];
-//    console.log(file);
-//    var reader = new FileReader();
-//    reader.onload = function(e) {
-//        showHexResult(reader);
-//        showBinaryResult(reader);
-//    };
-//    reader.readAsBinaryString(file);
-//});
-//
-//function showHexResult(fr) {
-//    var markup, result, n, aByte, byteStr;
-//
-//    markup = [];
-//    result = fr.result;
-//    for (n = 0; n < result.length; ++n) {
-//        aByte = result.charCodeAt(n);
-//        byteStr = aByte.toString(16);
-//        if (byteStr.length < 2) {
-//            byteStr = "0" + byteStr;
-//        }
-//        markup.push(byteStr);
-//    }
-//    bodyAppend("p", "Hex (" + result.length + "):");
-//    bodyAppend("pre", markup.join(" "));
-//}
-//
-//function showBinaryResult(fr) {
-//    var markup, result, n, aByte, byteStr;
-//
-//    markup = [];
-//    result = fr.result;
-//    for (n = 0; n < result.length; ++n) {
-//        aByte = result.charCodeAt(n);
-//        byteStr = aByte.toString(2);
-//        if (byteStr.length < 2) {
-//            byteStr = "0" + byteStr;
-//        }
-//        markup.push(byteStr);
-//    }
-//    bodyAppend("p", "Binary (" + result.length + "):");
-//    bodyAppend("pre", markup.join(" "));
-//}
-//
-//function bodyAppend(tagName, innerHTML) {
-//    var elm;
-//
-//    elm = document.createElement(tagName);
-//    elm.innerHTML = innerHTML;
-//    document.body.appendChild(elm);
-//}
-
-/**************************************************************************************************
  * Helper
  **************************************************************************************************/
 
@@ -147,6 +85,7 @@ Chip8VM.MAX_VREG = 16;
 Chip8VM.MAX_STACK = 16;
 Chip8VM.DELAY = 1;
 Chip8VM.HERTZ = 1;
+Chip8VM.SPEED = 2;
 
 /**
  * Initializer method
@@ -167,6 +106,7 @@ Chip8VM.prototype._initialize = function(clearMemory) {
     this.delay = parseInt($("#delayTextEditor").val());
     this.display.color =  $("#colorTextEditor").val();
     this.debugger = $("#debuggerCheckBox").is(":checked");
+    this.speed = $("#speedTextEditor").val();
 
     this.timeStarted = 0;
     this.timeStopped = 0;
@@ -821,8 +761,10 @@ Chip8VM.prototype.start = function() {
         var recursiveAnim = function() {
             if ( cpu.running ) {
                 try {
-                    cpu._mainLoop();
-                    sleep(cpu.delay);
+                    for ( var i = 0; i < cpu.speed; i++) {
+                        cpu._mainLoop();
+                        //sleep(cpu.delay);
+                    }
                     animFrame( recursiveAnim );
                 }
                 catch (e) {
@@ -972,11 +914,12 @@ Display.prototype.writePixel = function(x,y, value) {
 
     var collide = false;
 
-    if (this.frameBuffer[x][y] == 1) {
+    if (this.frameBuffer[x][y] == 1 && value == 1) {
         collide = true;
     }
 
     this.frameBuffer[x][y] = this.frameBuffer[x][y] ^ value;
+
     return collide;
 };
 
@@ -1007,16 +950,16 @@ Display.prototype.renderScreen = function() {
     var canvasWidth = canvas.width;
     var canvasHeight = canvas.height;
 
-    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-    ctx.fillStyle = this.color;
-
     var ratio_x = canvasWidth / Display.SCREEN_WIDTH;
     var ratio_y = canvasHeight / Display.SCREEN_HEIGHT;
+
+    ctx.clearRect(0,0,canvasWidth,canvasHeight);
 
     for ( var x = 0; x <= Display.SCREEN_WIDTH; x++) {
         for (var y = 0; y <= Display.SCREEN_HEIGHT; y++) {
             var pixel = this.frameBuffer[x][y];
             if ( pixel ) {
+                ctx.fillStyle = this.color;
                 ctx.fillRect(x * ratio_x, y * ratio_y, ratio_x, ratio_y);
             }
         }

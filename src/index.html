@@ -19,7 +19,8 @@ License under MIT<BR>
         Parameters:
         Delay (ms) <input type="text" id="delayTextEditor" style="width: 5em;">
         Display colors <input type="text" id="colorTextEditor" style="width: 10em;">
-        Debugger <input type="checkbox" id="debuggerCheckBox" checked>
+        Speed <input type="text" id="speedTextEditor" style="width: 5em;">
+        Debugger <input type="checkbox" id="debuggerCheckBox">
         Step-through mode <input type="checkbox">
     </div>
     <div id="cpuController" style="margin-top: 10px;">
@@ -39,7 +40,6 @@ License under MIT<BR>
                     <div>
                         <canvas id="display"
                              style="background-color: #000000; width: 640px; height: 320px;">
-
                         </canvas>
                     </div>
                 </td>
@@ -203,6 +203,7 @@ License under MIT<BR>
 
     $("#colorTextEditor").val(Display.SCREEN_COLOR);
     $("#delayTextEditor").val(Chip8VM.DELAY);
+    $("#speedTextEditor").val(Chip8VM.SPEED);
 
 
     $( "#programInput" ).change(function() {
