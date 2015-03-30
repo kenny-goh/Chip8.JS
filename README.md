@@ -2,7 +2,7 @@
 
 Javascript implementation of the Chip 8 Virtual Machine that runs in any modern browser
 
-This is a personal project to learn the basics of writing an emulator. Initially I wanted to write a MIX computer but decided to settle with Chip 8 due to simplicity.. I figure I would have more fun writing an emulator for a computer that is used for game programming in the 1970s.
+This is a personal project to learn the basics of writing an emulator. Initially I wanted to write a MIX computer but decided to settle with Chip 8 due to simplicity.. I figure I would have more fun writing an emulator for a computer that is used for game programming in the 1970s. For more information about Chip 80 computer, see http://en.wikipedia.org/wiki/CHIP-8 for more information about this virtual machine. 
 
 Current Status: Work in progress ( 80% done )
 
