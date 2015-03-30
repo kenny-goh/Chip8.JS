@@ -17,9 +17,9 @@ The emulator can run most of the Chip 8 program and some games. There are still 
 
 3. 100% compatibility with all Chip 8 program.
 
-4. Look and feel. The program is very user-unfriendly at the moment.
+4. Look and feel.
 
-5. Code refactoring.. The code is a unpolished at the moment. 
+5. Code refactoring.. The code is unpolished at the moment. 
 
 **How to run the emulator**:
 
