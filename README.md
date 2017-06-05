@@ -1,5 +1,6 @@
 # Chip8.JS
 [[https://github.com/kenny-goh/Chip8.JS/blob/master/logo.png]]
+![Screenshot](logo.png)
 
 **Javascript implementation of the Chip 8 Virtual Machine that runs in any modern web browser**
 
@@ -33,3 +34,4 @@ The emulator can run most of the Chip 8 program and some games. There are still 
 
 [[https://github.com/kenny-goh/Chip8.JS/blob/master/Chip8Emulator2.png]]
 
+![Screenshot](Chip8Emulator2.png)
