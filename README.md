@@ -1,5 +1,4 @@
 # Chip8.JS
-[[https://github.com/kenny-goh/Chip8.JS/blob/master/logo.png]]
 ![Screenshot](logo.png)
 
 **Javascript implementation of the Chip 8 Virtual Machine that runs in any modern web browser**
@@ -31,7 +30,5 @@ The emulator can run most of the Chip 8 program and some games. There are still 
 2. Open the chip8 program by choosing a file. ( eg. Select ..Chip-8 Pack\Chip-8 Demos\maze.ch8 )
 
 3. Voila!
-
-[[https://github.com/kenny-goh/Chip8.JS/blob/master/Chip8Emulator2.png]]
 
 ![Screenshot](Chip8Emulator2.png)
